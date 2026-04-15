@@ -1,25 +1,17 @@
 #!/usr/bin/env python3
 """
-UrbanEcho dataset curation script
+UrbanEcho Dataset Preparation Tool
+Senior ML Data Engineer - Acoustic Ecology Specialist
+Automates curation, resampling, and organization of audio data for TinyML training.
 
-What this script does:
-1) Downloads ESC-50 and UrbanSound8K public archives with requests.
-2) Selects relevant source classes for:
-   - Biophony (birds, insects, frogs)
-   - Anthropophony (urban noise)
-   - Geophony (wind, rain, weather-like ambience)
-3) Resamples every selected clip to exactly:
-   - 16,000 Hz
-   - mono
-   - 16-bit PCM WAV
-4) Writes output into folders named exactly:
-   - ./Biophony
-   - ./Anthropophony
-   - ./Geophony
+Usage:
+    python3 scripts/prepare_urbanecho_dataset.py [--clean]
 
-Notes:
-- UrbanSound8K archive is large. Ensure you have enough disk space and bandwidth.
-- Re-running with --clean removes existing WAVs in output folders first.
+Features:
+    - Downloads ESC-50 and UrbanSound8K datasets
+    - Resamples to 16 kHz, 16-bit PCM, Mono
+    - Organizes into Biophony/Anthropophony/Geophony taxonomy
+    - Validates audio format and integrity
 """
 
 from __future__ import annotations
@@ -31,13 +23,19 @@ import random
 import shutil
 import tarfile
 import zipfile
+import logging
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-import librosa
-import requests
-import soundfile as sf
+try:
+    import librosa
+    import soundfile as sf
+    import requests
+except ImportError:
+    print("ERROR: Required packages not found. Install with:")
+    print("  pip install librosa soundfile requests")
+    exit(1)
 
 
 ESC50_ZIP_URL = "https://github.com/karolpiczak/ESC-50/archive/refs/heads/master.zip"
@@ -45,6 +43,9 @@ URBANSOUND8K_TAR_URL = "https://zenodo.org/record/1203745/files/UrbanSound8K.tar
 
 TARGET_SR = 16000
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger(__name__)
 
 # ESC-50 categories relevant to acoustic ecology taxonomy.
 ESC50_CLASS_TO_TAXONOMY: Dict[str, str] = {
