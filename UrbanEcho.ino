@@ -37,7 +37,13 @@
 // Wi-Fi Configuration
 const char* WIFI_SSID     = "Bhargav";
 const char* WIFI_PASSWORD = "radheradhe";
-const char* SERVER_URL = "http://10.23.241.101:3000/api/upload";
+const char* SERVER_HOST   = "10.23.241.101";
+const uint16_t SERVER_PORT = 3000;
+const char* SERVER_PATH   = "/api/upload";
+
+String get_server_url() {
+    return String("http://") + SERVER_HOST + ":" + String(SERVER_PORT) + SERVER_PATH;
+}
 
 // Hardware Pin Definitions
 #define I2S_SCK_PIN     26 // BCLK
@@ -306,7 +312,8 @@ bool upload_event(const AudioEvent& event) {
     }
 
     HTTPClient http;
-    http.begin(SERVER_URL);
+    String server_url = get_server_url();
+    http.begin(server_url);
     http.addHeader("Content-Type", "application/json");
 
     // Construct JSON payload
